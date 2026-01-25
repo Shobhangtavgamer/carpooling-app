@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ride Details - Carpool Connect</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <style>
+    body {
+      padding-top: 80px;
+    }
+
+    #map {
+      height: 400px;
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .ride-info-card {
+      background: var(--bg-card);
+      padding: var(--spacing-xl);
+      border-radius: var(--radius-xl);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .driver-card {
+      background: var(--bg-secondary);
+      padding: var(--spacing-lg);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: var(--spacing-md) 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .info-row:last-child {
+      border-bottom: none;
+    }
+
+    .price-box {
+      background: var(--gradient-primary);
+      padding: var(--spacing-lg);
+      border-radius: var(--radius-lg);
+      text-align: center;
+      color: white;
+    }
+
+    .price-amount {
+      font-size: 2.5rem;
+      font-weight: 800;
+      margin-bottom: var(--spacing-sm);
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="container navbar-content">
+      <a href="index.html" class="navbar-brand">🚗 Carpool Connect</a>
+      <ul class="navbar-menu">
+        <li><a href="driver-dashboard.html" class="navbar-link">Driver</a></li>
+        <li><a href="passenger-dashboard.html" class="navbar-link">Passenger</a></li>
+        <li><a href="profile.html" class="navbar-link">Profile</a></li>
+        <li><button onclick="logout()" class="btn btn-ghost btn-sm">Logout</button></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container" style="margin-top: var(--spacing-2xl); max-width: 1000px;">
+    <button onclick="history.back()" class="btn btn-ghost mb-lg">
+      ← Back
+    </button>
+
+    <div id="rideContent">
+      <div class="card text-center p-xl">
+        <div class="spinner"></div>
+        <p class="text-secondary mt-md">Loading ride details...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+  <!-- Google Maps API -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBo0docpHeWLl353mUHkj9UERkCGpwH7VE&libraries=places"></script>
+
+  <!-- App Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/maps.js"></script>
+
+  <script>
+    let currentRide = null;
+    let currentUser = null;
+
+    // Load ride details
+    async function loadRideDetails() {
+      try {
+        const rideId = getQueryParam('id');
+        if (!rideId) {
+          window.location.href = 'passenger-dashboard.html';
+          return;
+        }
+
+        currentUser = await requireAuth();
+        
+        const rideDoc = await db.collection('rides').doc(rideId).get();
+        if (!rideDoc.exists) {
+          showToast('Ride not found', 'error');
+          setTimeout(() => window.location.href = 'passenger-dashboard.html', 2000);
+          return;
+        }
+
+        currentRide = { id: rideDoc.id, ...rideDoc.data() };
+        displayRideDetails(currentRide);
+        
+        // Initialize map and show route
+        initMap('map');
+        await calculateRoute(
+          { lat: currentRide.origin.lat, lng: currentRide.origin.lng },
+          { lat: currentRide.destination.lat, lng: currentRide.destination.lng }
+        );
+
+      } catch (error) {
+        console.error('Error loading ride:', error);
+        showToast('Error loading ride details', 'error');
+      }
+    }
+
+    // Display ride details
+    function displayRideDetails(ride) {
+      const availableSeats = ride.seats - (ride.bookedSeats || 0);
+      const isDriver = currentUser && currentUser.uid === ride.driverId;
+
+      const content = `
+        <h1 class="mb-lg">${ride.origin.address} → ${ride.destination.address}</h1>
+
+        <!-- Map -->
+        <div id="map"></div>
+
+        <div class="grid grid-2 gap-lg">
+          <!-- Left Column -->
+          <div>
+            <!-- Driver Info -->
+            <div class="driver-card">
+              <h3 class="mb-md">Driver Information</h3>
+              <div class="flex items-center gap-md mb-md">
+                <img src="${ride.driverPhoto}" alt="${ride.driverName}" class="avatar-lg">
+                <div>
+                  <h4 class="font-semibold">${ride.driverName}</h4>
+                  <p class="text-muted">⭐ ${ride.driverRating.toFixed(1)} rating</p>
+                </div>
+              </div>
+              ${ride.vehicleInfo ? `
+                <p class="text-secondary">🚗 ${ride.vehicleInfo}</p>
+              ` : ''}
+            </div>
+
+            <!-- Ride Details -->
+            <div class="ride-info-card">
+              <h3 class="mb-md">Ride Details</h3>
+              
+              <div class="info-row">
+                <span class="text-muted">📅 Date</span>
+                <span class="font-semibold">${formatDate(ride.date)}</span>
+              </div>
+
+              <div class="info-row">
+                <span class="text-muted">🕐 Time</span>
+                <span class="font-semibold">${formatTime(ride.time)}</span>
+              </div>
+
+              <div class="info-row">
+                <span class="text-muted">💺 Available Seats</span>
+                <span class="font-semibold">${availableSeats} / ${ride.seats}</span>
+              </div>
+
+              ${ride.distance ? `
+                <div class="info-row">
+                  <span class="text-muted">📍 Distance</span>
+                  <span class="font-semibold">${ride.distance}</span>
+                </div>
+              ` : ''}
+
+              ${ride.duration ? `
+                <div class="info-row">
+                  <span class="text-muted">⏱️ Duration</span>
+                  <span class="font-semibold">${ride.duration}</span>
+                </div>
+              ` : ''}
+
+              <div class="info-row">
+                <span class="text-muted">Status</span>
+                <span class="badge badge-${ride.status === 'active' ? 'success' : 'primary'}">${ride.status}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column -->
+          <div>
+            <!-- Price & Booking -->
+            <div class="price-box mb-lg">
+              <div class="price-amount">${formatCurrency(ride.price)}</div>
+              <div>per seat</div>
+            </div>
+
+            ${!isDriver && ride.status === 'active' && availableSeats > 0 ? `
+              <button class="btn btn-secondary btn-lg" style="width: 100%;" onclick="bookThisRide()">
+                Book This Ride
+              </button>
+            ` : isDriver ? `
+              <div class="alert alert-info">
+                <p>This is your ride. You can manage it from the Driver Dashboard.</p>
+              </div>
+              <a href="driver-dashboard.html" class="btn btn-primary" style="width: 100%;">
+                Go to Driver Dashboard
+              </a>
+            ` : availableSeats === 0 ? `
+              <div class="alert alert-warning">
+                <p>This ride is fully booked.</p>
+              </div>
+            ` : `
+              <div class="alert alert-warning">
+                <p>This ride is no longer available.</p>
+              </div>
+            `}
+
+            <!-- Route Info -->
+            <div class="ride-info-card mt-lg">
+              <h3 class="mb-md">Route</h3>
+              <div class="mb-md">
+                <div class="flex items-center gap-sm mb-sm">
+                  <span style="color: var(--success);">●</span>
+                  <span class="font-semibold">Pickup</span>
+                </div>
+                <p class="text-secondary" style="margin-left: 1.5rem;">${ride.origin.address}</p>
+              </div>
+              
+              <div style="margin-left: 0.5rem; border-left: 2px dashed var(--text-muted); height: 30px; margin-bottom: var(--spacing-md);"></div>
+              
+              <div>
+                <div class="flex items-center gap-sm mb-sm">
+                  <span style="color: var(--danger);">●</span>
+                  <span class="font-semibold">Drop-off</span>
+                </div>
+                <p class="text-secondary" style="margin-left: 1.5rem;">${ride.destination.address}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('rideContent').innerHTML = content;
+    }
+
+    // Book this ride
+    function bookThisRide() {
+      const availableSeats = currentRide.seats - (currentRide.bookedSeats || 0);
+      
+      const seats = prompt(`How many seats do you need? (Max: ${availableSeats})`);
+      if (!seats || seats < 1 || seats > availableSeats) {
+        return;
+      }
+
+      bookRide(currentRide.id, parseInt(seats));
+    }
+
+    // Book ride function
+    async function bookRide(rideId, seatsToBook) {
+      try {
+        const userData = await getUserData(currentUser.uid);
+        
+        showLoading('Booking ride...');
+        
+        const ride = currentRide;
+        const availableSeats = ride.seats - (ride.bookedSeats || 0);
+        
+        if (seatsToBook > availableSeats) {
+          hideLoading();
+          showToast('Not enough seats available', 'error');
+          return;
+        }
+        
+        const booking = {
+          rideId: rideId,
+          passengerId: currentUser.uid,
+          passengerName: userData.name,
+          passengerPhoto: userData.photoURL,
+          passengerPhone: userData.phone,
+          driverId: ride.driverId,
+          seatsBooked: parseInt(seatsToBook),
+          totalPrice: ride.price * seatsToBook,
+          status: 'confirmed',
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        
+        await db.collection('bookings').add(booking);
+        
+        await db.collection('rides').doc(rideId).update({
+          bookedSeats: firebase.firestore.FieldValue.increment(parseInt(seatsToBook))
+        });
+        
+        hideLoading();
+        showToast('Ride booked successfully!', 'success');
+        
+        setTimeout(() => {
+          window.location.href = 'passenger-dashboard.html';
+        }, 1500);
+        
+      } catch (error) {
+        hideLoading();
+        console.error('Error booking ride:', error);
+        showToast('Error booking ride', 'error');
+      }
+    }
+
+    // Initialize on page load
+    loadRideDetails();
+  </script>
+</body>
+</html>

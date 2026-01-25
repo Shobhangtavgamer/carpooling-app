@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carpool Connect - Share Your Ride, Save Money</title>
+  <meta name="description" content="Join Carpool Connect to find affordable carpooling options. Save money, reduce carbon footprint, and meet new people.">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <style>
+    /* Hero Section */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      background: var(--gradient-dark);
+      position: relative;
+      overflow: hidden;
+      padding-top: 80px;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+                  radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-title {
+      font-size: 4rem;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: var(--spacing-lg);
+      background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-subtitle {
+      font-size: 1.5rem;
+      color: var(--text-secondary);
+      margin-bottom: var(--spacing-2xl);
+      max-width: 600px;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: var(--spacing-lg);
+      flex-wrap: wrap;
+    }
+
+    /* Features Section */
+    .features {
+      padding: var(--spacing-2xl) 0;
+      background: var(--bg-primary);
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .feature-card {
+      text-align: center;
+      padding: var(--spacing-xl);
+    }
+
+    .feature-icon {
+      font-size: 3rem;
+      margin-bottom: var(--spacing-lg);
+      display: block;
+    }
+
+    .feature-title {
+      font-size: 1.5rem;
+      margin-bottom: var(--spacing-md);
+    }
+
+    /* Stats Section */
+    .stats {
+      padding: var(--spacing-2xl) 0;
+      background: var(--bg-secondary);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--spacing-xl);
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 3rem;
+      font-weight: 800;
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .stat-label {
+      color: var(--text-secondary);
+      font-size: 1.125rem;
+    }
+
+    /* How It Works */
+    .how-it-works {
+      padding: var(--spacing-2xl) 0;
+      background: var(--bg-primary);
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: var(--spacing-xl);
+      margin-top: var(--spacing-2xl);
+    }
+
+    .step {
+      position: relative;
+      padding: var(--spacing-xl);
+      text-align: center;
+    }
+
+    .step-number {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--gradient-primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin: 0 auto var(--spacing-lg);
+    }
+
+    .step-title {
+      font-size: 1.25rem;
+      margin-bottom: var(--spacing-md);
+    }
+
+    /* CTA Section */
+    .cta {
+      padding: var(--spacing-2xl) 0;
+      background: var(--gradient-primary);
+      text-align: center;
+    }
+
+    .cta-title {
+      font-size: 2.5rem;
+      margin-bottom: var(--spacing-lg);
+      color: white;
+    }
+
+    .cta-subtitle {
+      font-size: 1.25rem;
+      color: rgba(255, 255, 255, 0.9);
+      margin-bottom: var(--spacing-xl);
+    }
+
+    @media (max-width: 768px) {
+      .hero-title {
+        font-size: 2.5rem;
+      }
+      
+      .hero-subtitle {
+        font-size: 1.125rem;
+      }
+      
+      .hero-buttons {
+        flex-direction: column;
+      }
+      
+      .hero-buttons .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="container navbar-content">
+      <a href="index.html" class="navbar-brand">🚗 Carpool Connect</a>
+      <ul class="navbar-menu">
+        <li><a href="#features" class="navbar-link">Features</a></li>
+        <li><a href="#how-it-works" class="navbar-link">How It Works</a></li>
+        <li><a href="login.html" class="navbar-link auth-link">Login</a></li>
+        <li><a href="register.html" class="btn btn-primary btn-sm auth-link">Sign Up</a></li>
+        <li class="user-menu" style="display: none;">
+          <a href="passenger-dashboard.html" class="navbar-link">Dashboard</a>
+          <button onclick="logout()" class="btn btn-ghost btn-sm">Logout</button>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container hero-content">
+      <h1 class="hero-title animate-fadeIn">
+        Share Your Ride,<br>Save Money
+      </h1>
+      <p class="hero-subtitle animate-fadeIn">
+        Join thousands of commuters who save money and reduce their carbon footprint by carpooling. Find rides or offer your empty seats today.
+      </p>
+      <div class="hero-buttons animate-fadeIn">
+        <a href="passenger-dashboard.html" class="btn btn-primary btn-lg">
+          🔍 Find a Ride
+        </a>
+        <a href="driver-dashboard.html" class="btn btn-outline btn-lg">
+          🚗 Offer a Ride
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features" id="features">
+    <div class="container">
+      <h2 class="section-title">Why Choose Carpool Connect?</h2>
+      <div class="grid grid-3">
+        <div class="card feature-card">
+          <span class="feature-icon">💰</span>
+          <h3 class="feature-title">Save Money</h3>
+          <p class="text-secondary">
+            Split fuel costs with fellow travelers and save up to 70% on your daily commute expenses.
+          </p>
+        </div>
+
+        <div class="card feature-card">
+          <span class="feature-icon">🌍</span>
+          <h3 class="feature-title">Eco-Friendly</h3>
+          <p class="text-secondary">
+            Reduce your carbon footprint by sharing rides and contributing to a greener planet.
+          </p>
+        </div>
+
+        <div class="card feature-card">
+          <span class="feature-icon">👥</span>
+          <h3 class="feature-title">Meet People</h3>
+          <p class="text-secondary">
+            Connect with like-minded commuters and make your journey more enjoyable.
+          </p>
+        </div>
+
+        <div class="card feature-card">
+          <span class="feature-icon">🔒</span>
+          <h3 class="feature-title">Safe & Secure</h3>
+          <p class="text-secondary">
+            Verified profiles, ratings, and reviews ensure a safe carpooling experience.
+          </p>
+        </div>
+
+        <div class="card feature-card">
+          <span class="feature-icon">⚡</span>
+          <h3 class="feature-title">Quick Booking</h3>
+          <p class="text-secondary">
+            Find and book rides in seconds with our intuitive search and booking system.
+          </p>
+        </div>
+
+        <div class="card feature-card">
+          <span class="feature-icon">📱</span>
+          <h3 class="feature-title">Easy to Use</h3>
+          <p class="text-secondary">
+            Simple, modern interface that works seamlessly on all your devices.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats Section -->
+  <section class="stats">
+    <div class="container">
+      <div class="stats-grid">
+        <div>
+          <div class="stat-number">50K+</div>
+          <div class="stat-label">Active Users</div>
+        </div>
+        <div>
+          <div class="stat-number">100K+</div>
+          <div class="stat-label">Rides Shared</div>
+        </div>
+        <div>
+          <div class="stat-number">₹5Cr+</div>
+          <div class="stat-label">Money Saved</div>
+        </div>
+        <div>
+          <div class="stat-number">4.8★</div>
+          <div class="stat-label">Average Rating</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works Section -->
+  <section class="how-it-works" id="how-it-works">
+    <div class="container">
+      <h2 class="section-title">How It Works</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="step-number">1</div>
+          <h3 class="step-title">Sign Up</h3>
+          <p class="text-secondary">
+            Create your free account in less than a minute using email or Google.
+          </p>
+        </div>
+
+        <div class="step">
+          <div class="step-number">2</div>
+          <h3 class="step-title">Search or Post</h3>
+          <p class="text-secondary">
+            Find available rides or post your own ride with route and pricing details.
+          </p>
+        </div>
+
+        <div class="step">
+          <div class="step-number">3</div>
+          <h3 class="step-title">Book & Connect</h3>
+          <p class="text-secondary">
+            Book your seat and connect with your driver or passengers.
+          </p>
+        </div>
+
+        <div class="step">
+          <div class="step-number">4</div>
+          <h3 class="step-title">Ride & Save</h3>
+          <p class="text-secondary">
+            Enjoy your ride, save money, and help the environment!
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta">
+    <div class="container">
+      <h2 class="cta-title">Ready to Start Saving?</h2>
+      <p class="cta-subtitle">Join Carpool Connect today and make your commute affordable and eco-friendly</p>
+      <a href="register.html" class="btn btn-ghost btn-lg" style="background: white; color: var(--primary);">
+        Get Started Free
+      </a>
+    </div>
+  </section>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+  <!-- App Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/auth.js"></script>
+
+  <script>
+    // Initialize auth state listener
+    initAuthListener();
+
+    // Smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+  </script>
+</body>
+</html>

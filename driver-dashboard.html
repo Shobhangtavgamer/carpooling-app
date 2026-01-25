@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Driver Dashboard - Carpool Connect</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <style>
+    body {
+      padding-top: 80px;
+    }
+
+    .dashboard-header {
+      background: var(--gradient-primary);
+      padding: var(--spacing-2xl) 0;
+      margin-bottom: var(--spacing-2xl);
+    }
+
+    .dashboard-title {
+      color: white;
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .dashboard-subtitle {
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .stats-card {
+      background: var(--bg-card);
+      padding: var(--spacing-lg);
+      border-radius: var(--radius-lg);
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--primary-light);
+    }
+
+    .stat-label {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    #map {
+      height: 400px;
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .form-section {
+      background: var(--bg-secondary);
+      padding: var(--spacing-xl);
+      border-radius: var(--radius-xl);
+      margin-bottom: var(--spacing-2xl);
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="container navbar-content">
+      <a href="index.html" class="navbar-brand">🚗 Carpool Connect</a>
+      <ul class="navbar-menu">
+        <li><a href="driver-dashboard.html" class="navbar-link active">Driver</a></li>
+        <li><a href="passenger-dashboard.html" class="navbar-link">Passenger</a></li>
+        <li><a href="profile.html" class="navbar-link">Profile</a></li>
+        <li><button onclick="logout()" class="btn btn-ghost btn-sm">Logout</button></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Dashboard Header -->
+  <div class="dashboard-header">
+    <div class="container">
+      <h1 class="dashboard-title">Driver Dashboard</h1>
+      <p class="dashboard-subtitle">Post rides and manage your bookings</p>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Stats -->
+    <div class="grid grid-4 mb-xl">
+      <div class="stats-card">
+        <div class="stat-value" id="totalRides">0</div>
+        <div class="stat-label">Total Rides</div>
+      </div>
+      <div class="stats-card">
+        <div class="stat-value" id="activeRides">0</div>
+        <div class="stat-label">Active Rides</div>
+      </div>
+      <div class="stats-card">
+        <div class="stat-value" id="totalEarnings">₹0</div>
+        <div class="stat-label">Total Earnings</div>
+      </div>
+      <div class="stats-card">
+        <div class="stat-value" id="rating">5.0★</div>
+        <div class="stat-label">Your Rating</div>
+      </div>
+    </div>
+
+    <!-- Post Ride Form -->
+    <div class="form-section">
+      <h2 class="mb-lg">Post a New Ride</h2>
+      
+      <!-- Map -->
+      <div id="map"></div>
+
+      <form id="postRideForm">
+        <input type="hidden" id="rideId" value="">
+        
+        <div class="grid grid-2">
+          <div class="form-group">
+            <label class="form-label" for="origin">📍 Pickup Location</label>
+            <input 
+              type="text" 
+              id="origin" 
+              class="form-input" 
+              placeholder="Enter pickup location"
+              required
+            >
+            <div class="form-error">Pickup location is required</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="destination">🎯 Drop Location</label>
+            <input 
+              type="text" 
+              id="destination" 
+              class="form-input" 
+              placeholder="Enter drop location"
+              required
+            >
+            <div class="form-error">Drop location is required</div>
+          </div>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="form-group">
+            <label class="form-label" for="date">📅 Date</label>
+            <input 
+              type="date" 
+              id="date" 
+              class="form-input"
+              required
+            >
+            <div class="form-error">Date is required</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="time">🕐 Time</label>
+            <input 
+              type="time" 
+              id="time" 
+              class="form-input"
+              required
+            >
+            <div class="form-error">Time is required</div>
+          </div>
+        </div>
+
+        <div class="grid grid-3">
+          <div class="form-group">
+            <label class="form-label" for="seats">💺 Available Seats</label>
+            <input 
+              type="number" 
+              id="seats" 
+              class="form-input" 
+              min="1" 
+              max="8"
+              placeholder="1-8"
+              required
+            >
+            <div class="form-error">Enter seats (1-8)</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="price">💰 Price per Seat</label>
+            <input 
+              type="number" 
+              id="price" 
+              class="form-input" 
+              min="0"
+              step="10"
+              placeholder="₹100"
+              required
+            >
+            <div class="form-error">Price is required</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="vehicleInfo">🚗 Vehicle Info</label>
+            <input 
+              type="text" 
+              id="vehicleInfo" 
+              class="form-input" 
+              placeholder="Honda City, White"
+            >
+          </div>
+        </div>
+
+        <div id="routeInfo" class="alert alert-info" style="display: none;">
+          <div>
+            <strong>Route Information:</strong><br>
+            Distance: <span id="routeDistance">-</span> • 
+            Duration: <span id="routeDuration">-</span>
+          </div>
+        </div>
+
+        <div class="flex gap-md">
+          <button type="submit" class="btn btn-primary">
+            <span id="submitBtnText">Post Ride</span>
+          </button>
+          <button type="button" class="btn btn-ghost" onclick="resetForm()">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Posted Rides -->
+    <div>
+      <h2 class="mb-lg">Your Posted Rides</h2>
+      <div id="ridesContainer" class="grid gap-lg">
+        <div class="card text-center p-xl">
+          <div class="spinner"></div>
+          <p class="text-secondary mt-md">Loading rides...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+  <!-- Google Maps API -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBo0docpHeWLl353mUHkj9UERkCGpwH7VE&libraries=places"></script>
+
+  <!-- App Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/maps.js"></script>
+  <script src="js/driver.js"></script>
+
+  <script>
+    let originAutocomplete, destinationAutocomplete;
+
+    // Initialize page
+    async function initPage() {
+      try {
+        const user = await requireAuth();
+        const userData = await getUserData(user.uid);
+        
+        // Initialize map
+        initMap('map');
+        
+        // Initialize autocomplete
+        originAutocomplete = initAutocomplete('origin', (place) => {
+          selectedOrigin = {
+            address: place.formatted_address,
+            lat: place.geometry.location.lat(),
+            lng: place.geometry.location.lng()
+          };
+          
+          if (selectedDestination) {
+            updateRoute();
+          }
+        });
+        
+        destinationAutocomplete = initAutocomplete('destination', (place) => {
+          selectedDestination = {
+            address: place.formatted_address,
+            lat: place.geometry.location.lat(),
+            lng: place.geometry.location.lng()
+          };
+          
+          if (selectedOrigin) {
+            updateRoute();
+          }
+        });
+        
+        // Set minimum date to today
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('date').min = today;
+        
+        // Load driver's rides
+        const rides = await loadDriverRides();
+        
+        // Update stats
+        updateStats(rides, userData);
+        
+      } catch (error) {
+        console.error('Error initializing page:', error);
+      }
+    }
+
+    // Update route on map
+    async function updateRoute() {
+      if (!selectedOrigin || !selectedDestination) return;
+      
+      try {
+        routeInfo = await calculateRoute(
+          { lat: selectedOrigin.lat, lng: selectedOrigin.lng },
+          { lat: selectedDestination.lat, lng: selectedDestination.lng }
+        );
+        
+        // Display route info
+        document.getElementById('routeDistance').textContent = routeInfo.distance;
+        document.getElementById('routeDuration').textContent = routeInfo.duration;
+        document.getElementById('routeInfo').style.display = 'flex';
+        
+      } catch (error) {
+        console.error('Error calculating route:', error);
+        showToast('Error calculating route', 'error');
+      }
+    }
+
+    // Update statistics
+    function updateStats(rides, userData) {
+      const activeRides = rides.filter(r => r.status === 'active').length;
+      const totalEarnings = rides.reduce((sum, r) => sum + (r.price * (r.bookedSeats || 0)), 0);
+      
+      document.getElementById('totalRides').textContent = rides.length;
+      document.getElementById('activeRides').textContent = activeRides;
+      document.getElementById('totalEarnings').textContent = formatCurrency(totalEarnings);
+      document.getElementById('rating').textContent = (userData.rating || 5.0).toFixed(1) + '★';
+    }
+
+    // Form submission
+    document.getElementById('postRideForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      if (!selectedOrigin || !selectedDestination) {
+        showToast('Please select both pickup and drop locations', 'error');
+        return;
+      }
+      
+      if (!validateForm('postRideForm')) {
+        return;
+      }
+      
+      const rideId = document.getElementById('rideId').value;
+      const rideData = {
+        origin: selectedOrigin,
+        destination: selectedDestination,
+        date: document.getElementById('date').value,
+        time: document.getElementById('time').value,
+        seats: document.getElementById('seats').value,
+        price: document.getElementById('price').value,
+        vehicleInfo: document.getElementById('vehicleInfo').value,
+        distance: routeInfo?.distance || '',
+        duration: routeInfo?.duration || ''
+      };
+      
+      try {
+        if (rideId) {
+          await updateRide(rideId, rideData);
+        } else {
+          await postRide(rideData);
+        }
+        
+        resetForm();
+      } catch (error) {
+        // Error already handled
+      }
+    });
+
+    // Reset form
+    function resetForm() {
+      document.getElementById('postRideForm').reset();
+      document.getElementById('rideId').value = '';
+      document.getElementById('submitBtnText').textContent = 'Post Ride';
+      document.getElementById('routeInfo').style.display = 'none';
+      selectedOrigin = null;
+      selectedDestination = null;
+      routeInfo = null;
+      
+      // Clear map
+      if (directionsRenderer) {
+        directionsRenderer.setDirections({ routes: [] });
+      }
+    }
+
+    // Initialize on page load
+    initPage();
+  </script>
+</body>
+</html>
