@@ -146,7 +146,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Contact
 
 **Author**: Shobhan And AmanKumar
-**GitHub**: [Shobhangtavgamer](https://github.com/Shobhangtavgamer)[programmer-sultan786](https://github.com/programmer-sultan786))   
+**GitHub**: [Shobhangtavgamer](https://github.com/Shobhangtavgamer)
+**GitHub**:[programmer-sultan786](https://github.com/programmer-sultan786)  
 **Project Repository**: [carpooling-app](https://github.com/Shobhangtavgamer/carpooling-app)
 
 ## Support
